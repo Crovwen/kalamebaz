@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: kalamebaz
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    envVars:
+      - key: MODE
+        value: webhook
+      - key: BOT_TOKEN
+        sync: false
+      - key: OWNER_ID
+        sync: false
+      - key: DATABASE_URL     # Postgres بیرونی (Neon/Supabase) یا Postgres رندر
+        sync: false
