@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from html import escape
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramBadRequest, TelegramForbidden, TelegramRetryAfter
+from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError, TelegramRetryAfter
 
 from app.bot import keyboards as kb
 from app.config import Config
@@ -125,7 +125,7 @@ class GameService:
                 msg = await self.bot.send_message(
                     chat_id, render_round(state, utcnow()), reply_markup=kb.running_kb(state.hints_max)
                 )
-            except (TelegramForbidden, TelegramBadRequest) as e:
+            except (TelegramForbiddenError, TelegramBadRequest) as e:
                 await repo.finish_round(self.pool, state, "stopped")
                 log.warning("ارسال پیام مرحله ناموفق (%s): %s", chat_id, e)
                 return "ربات اجازه‌ی ارسال پیام در این گروه را ندارد."
@@ -214,7 +214,7 @@ class GameService:
                     await repo.set_message(self.pool, state.id, m.message_id)
                 else:
                     log.warning("ویرایش پیام ناموفق: %s", e)
-            except TelegramForbidden:
+            except TelegramForbiddenError:
                 state.finished = True
                 self.active.pop(state.chat_id, None)
                 await repo.finish_round(self.pool, state, "stopped")
@@ -240,7 +240,7 @@ class GameService:
                 await self.bot.send_message(state.chat_id, text, reply_markup=kb.finished_kb())
             except Exception:
                 log.warning("ارسال نتیجه مرحله ناموفق", exc_info=True)
-        except (TelegramForbidden, TelegramRetryAfter):
+        except (TelegramForbiddenError, TelegramRetryAfter):
             return
         if reason in ("time", "completed") and s["auto_next"] and s["enabled"]:
             self._spawn(self._auto_next(state.chat_id, s["interval"]))
