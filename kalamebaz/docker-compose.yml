@@ -1,0 +1,24 @@
+# اجرای محلی/VPS: docker compose up -d --build
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: kalameh
+      POSTGRES_PASSWORD: kalameh
+      POSTGRES_DB: kalameh
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kalameh"]
+      interval: 5s
+      retries: 10
+  bot:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://kalameh:kalameh@db:5432/kalameh
+      MODE: ${MODE:-polling}
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+volumes:
+  pgdata:
